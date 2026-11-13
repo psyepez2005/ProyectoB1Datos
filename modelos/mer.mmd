@@ -1,0 +1,84 @@
+erDiagram
+    DISTRITO ||--o{ PARQUE : contiene
+    DISTRITO ||--o{ ESTACION_METRO : ubica
+    CATEGORIA_PARQUE ||--o{ PARQUE : clasifica
+    COMPLEJO_ESTACION ||--|{ ESTACION_METRO : agrupa
+    LINEA_METRO ||--o{ ESTACION_METRO : pertenece
+    ESTACION_METRO ||--o{ SERVICIO_RUTA : tiene
+    RUTA_METRO ||--o{ SERVICIO_RUTA : presta
+    PARQUE ||--o{ PROXIMIDAD_METRO : cerca_de
+    ESTACION_METRO ||--o{ PROXIMIDAD_METRO : cerca_de
+    PARQUE ||--o{ PROXIMIDAD_BICI : cerca_de
+    ESTACION_BICI ||--o{ PROXIMIDAD_BICI : cerca_de
+
+    DISTRITO {
+        string id_distrito PK "codigo normalizado"
+        string nombre
+        string codigo_parques "B Q X R M"
+        string codigo_mta "Bk Q Bx SI M"
+    }
+    CATEGORIA_PARQUE {
+        string nombre PK "typecategory"
+    }
+    PARQUE {
+        string id_parque PK "gispropnum, unico"
+        string nombre "signname o name311"
+        string direccion
+        string codigo_postal
+        float acres
+        date fecha_adquisicion
+        string jurisdiccion
+        string id_distrito FK
+        string categoria FK
+        multipolygon geometria
+    }
+    COMPLEJO_ESTACION {
+        string id_complejo PK "complex_id"
+    }
+    LINEA_METRO {
+        string nombre_linea PK "line"
+        string division "BMT IND IRT"
+    }
+    ESTACION_METRO {
+        string gtfs_stop_id PK
+        string id_estacion "station_id, no unico"
+        string nombre "stop_name"
+        string estructura "structure"
+        boolean distrito_central "cbd"
+        int accesibilidad_ada "ada: 0 no, 1 total, 2 parcial"
+        int ada_norte "ada_northbound"
+        int ada_sur "ada_southbound"
+        string ada_notas "ada_notes"
+        float latitud
+        float longitud
+        string id_complejo FK
+        string nombre_linea FK
+        string id_distrito FK
+    }
+    RUTA_METRO {
+        string id_ruta PK "N W 1 A"
+    }
+    ESTACION_BICI {
+        string id_estacion_bici PK "station_id"
+        string nombre
+        string nombre_corto "short_name"
+        float latitud
+        float longitud
+        int capacidad
+        string tipo "station_type"
+        string id_region "region_id"
+    }
+    SERVICIO_RUTA {
+        string gtfs_stop_id PK, FK
+        string id_ruta PK, FK
+    }
+    PROXIMIDAD_METRO {
+        string id_parque PK, FK
+        string gtfs_stop_id PK, FK
+        float distancia_m "derivada"
+    }
+    PROXIMIDAD_BICI {
+        string id_parque PK, FK
+        string id_estacion_bici PK, FK
+        float distancia_m "derivada"
+    }
