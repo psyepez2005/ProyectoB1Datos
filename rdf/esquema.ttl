@@ -1,0 +1,513 @@
+# =============================================================================
+# Esquema RDF - Parques y transporte en Nueva York
+# Práctica bimestral 1B - Interoperabilidad y Explotación de Datos
+# Integrantes: Ricardo Espinosa, Pedro Yepez y Jordy Betancourt
+# Archivo: rdf/esquema.ttl  (serialización Turtle)
+#
+# Criterio: se reutiliza un término solo si su definición coincide con el concepto
+# del proyecto; lo demás se define en el espacio de nombres propio pnyc:.
+# Los términos reutilizados NO se redeclaran aquí: su dominio y rango son los
+# que fija cada vocabulario. Schema.org usa schema:domainIncludes y
+# schema:rangeIncludes en lugar de rdfs:domain y rdfs:range.
+#
+# example.org es un dominio reservado para ejemplos (RFC 2606). Cuando el
+# vocabulario se publique, la URI de pnyc: se reemplaza por la URL pública del
+# repositorio.
+# =============================================================================
+
+@prefix pnyc: <http://example.org/parques-nyc/ontologia#> .
+@prefix pnycr: <http://example.org/parques-nyc/recurso/> .
+@prefix schema: <https://schema.org/> .
+@prefix geo: <http://www.opengis.net/ont/geosparql#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix dcat: <http://www.w3.org/ns/dcat#> .
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# -----------------------------------------------------------------------------
+# Ontología
+# -----------------------------------------------------------------------------
+<http://example.org/parques-nyc/ontologia>
+    a owl:Ontology ;
+    dct:title "Esquema RDF de parques y transporte en Nueva York"@es ;
+    dct:description "Vocabulario para integrar Parks Properties, MTA Subway Stations y Citi Bike en un grafo de conocimiento sobre la accesibilidad de los parques de Nueva York en metro y bicicleta compartida."@es ;
+    dct:creator "Ricardo Espinosa" ,
+        "Pedro Yepez" ,
+        "Jordy Betancourt" ;
+    dct:created "2026-11-13"^^xsd:date ;
+    owl:versionInfo "1.0" ;
+    rdfs:seeAlso <https://schema.org/> ,
+        <http://www.opengis.net/ont/geosparql> ,
+        <http://www.w3.org/2004/02/skos/core> ,
+        <http://www.w3.org/ns/dcat> ,
+        <http://purl.org/dc/terms/> .
+
+# -----------------------------------------------------------------------------
+# Clases creadas
+# -----------------------------------------------------------------------------
+# MER: ESTACION_BICI
+pnyc:EstacionBicicleta
+    a owl:Class ;
+    rdfs:label "Estación de bicicleta compartida"@es ;
+    rdfs:comment "Punto fijo del sistema Citi Bike donde se retiran y devuelven bicicletas. Schema.org no tiene un tipo equivalente."@es ;
+    rdfs:subClassOf schema:Place ,
+        geo:Feature ;
+    rdfs:isDefinedBy <http://example.org/parques-nyc/ontologia> .
+
+# MER: COMPLEJO_ESTACION
+pnyc:ComplejoEstacion
+    a owl:Class ;
+    rdfs:label "Complejo de estaciones de metro"@es ;
+    rdfs:comment "Agrupación de una o más estaciones de metro conectadas entre sí (complex_id de la MTA)."@es ;
+    rdfs:subClassOf schema:Place ;
+    rdfs:isDefinedBy <http://example.org/parques-nyc/ontologia> .
+
+# MER: LINEA_METRO
+pnyc:LineaMetro
+    a owl:Class ;
+    rdfs:label "Línea de metro"@es ;
+    rdfs:comment "Línea de la red de metro (corredor con nombre propio, por ejemplo Astoria) a la que la MTA asigna la estación en el campo line, con su división histórica."@es ;
+    rdfs:isDefinedBy <http://example.org/parques-nyc/ontologia> .
+
+# MER: RUTA_METRO
+pnyc:RutaMetro
+    a owl:Class ;
+    rdfs:label "Ruta de metro"@es ;
+    rdfs:comment "Servicio identificado por una letra o número (N, W, 1, A...) que para en varias estaciones durante el día (campo daytime_routes)."@es ;
+    rdfs:isDefinedBy <http://example.org/parques-nyc/ontologia> .
+
+# MER: PROXIMIDAD_METRO / PROXIMIDAD_BICI
+pnyc:Proximidad
+    a owl:Class ;
+    rdfs:label "Proximidad"@es ;
+    rdfs:comment "Relación derivada entre un parque y una estación de transporte situada a menos del umbral de cercanía. Guarda la distancia calculada."@es ;
+    rdfs:isDefinedBy <http://example.org/parques-nyc/ontologia> .
+
+# MER: PROXIMIDAD_METRO
+pnyc:ProximidadMetro
+    a owl:Class ;
+    rdfs:label "Proximidad a estación de metro"@es ;
+    rdfs:comment "Proximidad entre un parque y una estación de metro."@es ;
+    rdfs:subClassOf pnyc:Proximidad ;
+    rdfs:isDefinedBy <http://example.org/parques-nyc/ontologia> .
+
+# MER: PROXIMIDAD_BICI
+pnyc:ProximidadBicicleta
+    a owl:Class ;
+    rdfs:label "Proximidad a estación de bicicleta"@es ;
+    rdfs:comment "Proximidad entre un parque y una estación de bicicleta compartida."@es ;
+    rdfs:subClassOf pnyc:Proximidad ;
+    rdfs:isDefinedBy <http://example.org/parques-nyc/ontologia> .
+
+# -----------------------------------------------------------------------------
+# Propiedades de objeto creadas
+# -----------------------------------------------------------------------------
+pnyc:enDistrito
+    a owl:ObjectProperty ;
+    rdfs:label "en distrito"@es ;
+    rdfs:comment "Une un parque o una estación de metro con el distrito que lo contiene."@es ;
+    rdfs:domain schema:Place ;
+    rdfs:range schema:AdministrativeArea ;
+    rdfs:subPropertyOf schema:containedInPlace ;
+    rdfs:isDefinedBy <http://example.org/parques-nyc/ontologia> .
+
+pnyc:perteneceAComplejo
+    a owl:ObjectProperty ;
+    rdfs:label "pertenece a complejo"@es ;
+    rdfs:comment "Une una estación de metro con su complejo."@es ;
+    rdfs:domain schema:SubwayStation ;
+    rdfs:range pnyc:ComplejoEstacion ;
+    rdfs:subPropertyOf schema:containedInPlace ;
+    rdfs:isDefinedBy <http://example.org/parques-nyc/ontologia> .
+
+pnyc:perteneceALinea
+    a owl:ObjectProperty ;
+    rdfs:label "pertenece a línea"@es ;
+    rdfs:comment "Une una estación de metro con la línea registrada en el campo line."@es ;
+    rdfs:domain schema:SubwayStation ;
+    rdfs:range pnyc:LineaMetro ;
+    rdfs:isDefinedBy <http://example.org/parques-nyc/ontologia> .
+
+pnyc:tieneRuta
+    a owl:ObjectProperty ;
+    rdfs:label "tiene ruta"@es ;
+    rdfs:comment "Ruta que para en la estación durante el día (equivale a SERVICIO_RUTA)."@es ;
+    rdfs:domain schema:SubwayStation ;
+    rdfs:range pnyc:RutaMetro ;
+    rdfs:isDefinedBy <http://example.org/parques-nyc/ontologia> .
+
+pnyc:tieneCategoria
+    a owl:ObjectProperty ;
+    rdfs:label "tiene categoría"@es ;
+    rdfs:comment "Categoría del parque según typecategory."@es ;
+    rdfs:domain schema:Park ;
+    rdfs:range skos:Concept ;
+    rdfs:isDefinedBy <http://example.org/parques-nyc/ontologia> .
+
+pnyc:deParque
+    a owl:ObjectProperty ;
+    rdfs:label "de parque"@es ;
+    rdfs:comment "Parque de origen de una proximidad."@es ;
+    rdfs:domain pnyc:Proximidad ;
+    rdfs:range schema:Park ;
+    rdfs:isDefinedBy <http://example.org/parques-nyc/ontologia> .
+
+pnyc:haciaEstacion
+    a owl:ObjectProperty ;
+    rdfs:label "hacia estación"@es ;
+    rdfs:comment "Estación de destino de una proximidad."@es ;
+    rdfs:domain pnyc:Proximidad ;
+    rdfs:range schema:Place ;
+    rdfs:isDefinedBy <http://example.org/parques-nyc/ontologia> .
+
+pnyc:haciaEstacionMetro
+    a owl:ObjectProperty ;
+    rdfs:label "hacia estación de metro"@es ;
+    rdfs:comment "Estación de metro de una proximidad de metro."@es ;
+    rdfs:domain pnyc:ProximidadMetro ;
+    rdfs:range schema:SubwayStation ;
+    rdfs:subPropertyOf pnyc:haciaEstacion ;
+    rdfs:isDefinedBy <http://example.org/parques-nyc/ontologia> .
+
+pnyc:haciaEstacionBicicleta
+    a owl:ObjectProperty ;
+    rdfs:label "hacia estación de bicicleta"@es ;
+    rdfs:comment "Estación de bicicleta de una proximidad de bicicleta."@es ;
+    rdfs:domain pnyc:ProximidadBicicleta ;
+    rdfs:range pnyc:EstacionBicicleta ;
+    rdfs:subPropertyOf pnyc:haciaEstacion ;
+    rdfs:isDefinedBy <http://example.org/parques-nyc/ontologia> .
+
+pnyc:cercaDe
+    a owl:ObjectProperty ;
+    rdfs:label "cerca de"@es ;
+    rdfs:comment "Atajo directo entre un parque y una estación a menos del umbral. Se genera a partir de cada pnyc:Proximidad para simplificar las consultas; la distancia queda en el nodo Proximidad."@es ;
+    rdfs:domain schema:Park ;
+    rdfs:range schema:Place ;
+    rdfs:isDefinedBy <http://example.org/parques-nyc/ontologia> .
+
+pnyc:cercaDeEstacionMetro
+    a owl:ObjectProperty ;
+    rdfs:label "cerca de estación de metro"@es ;
+    rdfs:comment "Atajo directo entre un parque y una estación de metro cercana."@es ;
+    rdfs:domain schema:Park ;
+    rdfs:range schema:SubwayStation ;
+    rdfs:subPropertyOf pnyc:cercaDe ;
+    rdfs:isDefinedBy <http://example.org/parques-nyc/ontologia> .
+
+pnyc:cercaDeEstacionBicicleta
+    a owl:ObjectProperty ;
+    rdfs:label "cerca de estación de bicicleta"@es ;
+    rdfs:comment "Atajo directo entre un parque y una estación de bicicleta cercana."@es ;
+    rdfs:domain schema:Park ;
+    rdfs:range pnyc:EstacionBicicleta ;
+    rdfs:subPropertyOf pnyc:cercaDe ;
+    rdfs:isDefinedBy <http://example.org/parques-nyc/ontologia> .
+
+# -----------------------------------------------------------------------------
+# Propiedades de datos creadas
+# -----------------------------------------------------------------------------
+pnyc:idParque
+    a owl:DatatypeProperty ;
+    rdfs:label "identificador del parque"@es ;
+    rdfs:comment "Valor de gispropnum (2.061 valores únicos)."@es ;
+    rdfs:domain schema:Park ;
+    rdfs:range xsd:string ;
+    rdfs:subPropertyOf schema:identifier ;
+    rdfs:isDefinedBy <http://example.org/parques-nyc/ontologia> .
+
+pnyc:areaAcres
+    a owl:DatatypeProperty ;
+    rdfs:label "área en acres"@es ;
+    rdfs:comment "Superficie del parque en acres (campo acres)."@es ;
+    rdfs:domain schema:Park ;
+    rdfs:range xsd:decimal ;
+    rdfs:isDefinedBy <http://example.org/parques-nyc/ontologia> .
+
+pnyc:fechaAdquisicion
+    a owl:DatatypeProperty ;
+    rdfs:label "fecha de adquisición"@es ;
+    rdfs:comment "Fecha en que la ciudad adquirió la propiedad."@es ;
+    rdfs:domain schema:Park ;
+    rdfs:range xsd:date ;
+    rdfs:isDefinedBy <http://example.org/parques-nyc/ontologia> .
+
+pnyc:jurisdiccion
+    a owl:DatatypeProperty ;
+    rdfs:label "jurisdicción"@es ;
+    rdfs:comment "Entidad que administra la propiedad (campo jurisdiction)."@es ;
+    rdfs:domain schema:Park ;
+    rdfs:range xsd:string ;
+    rdfs:isDefinedBy <http://example.org/parques-nyc/ontologia> .
+
+pnyc:codigoDistrito
+    a owl:DatatypeProperty ;
+    rdfs:label "código normalizado del distrito"@es ;
+    rdfs:comment "Código propio del proyecto (MN, BX, BK, QN, SI)."@es ;
+    rdfs:domain schema:AdministrativeArea ;
+    rdfs:range xsd:string ;
+    rdfs:subPropertyOf schema:identifier ;
+    rdfs:isDefinedBy <http://example.org/parques-nyc/ontologia> .
+
+pnyc:codigoParques
+    a owl:DatatypeProperty ;
+    rdfs:label "código de distrito en Parks Properties"@es ;
+    rdfs:comment "Código usado por NYC Parks (M, X, B, Q, R)."@es ;
+    rdfs:domain schema:AdministrativeArea ;
+    rdfs:range xsd:string ;
+    rdfs:subPropertyOf schema:identifier ;
+    rdfs:isDefinedBy <http://example.org/parques-nyc/ontologia> .
+
+pnyc:codigoMetro
+    a owl:DatatypeProperty ;
+    rdfs:label "código de distrito en la MTA"@es ;
+    rdfs:comment "Código usado por la MTA (M, Bx, Bk, Q, SI)."@es ;
+    rdfs:domain schema:AdministrativeArea ;
+    rdfs:range xsd:string ;
+    rdfs:subPropertyOf schema:identifier ;
+    rdfs:isDefinedBy <http://example.org/parques-nyc/ontologia> .
+
+pnyc:gtfsStopId
+    a owl:DatatypeProperty ;
+    rdfs:label "identificador GTFS de la parada"@es ;
+    rdfs:comment "Clave de la estación de metro (496 valores únicos)."@es ;
+    rdfs:domain schema:SubwayStation ;
+    rdfs:range xsd:string ;
+    rdfs:subPropertyOf schema:identifier ;
+    rdfs:isDefinedBy <http://example.org/parques-nyc/ontologia> .
+
+pnyc:idEstacionMTA
+    a owl:DatatypeProperty ;
+    rdfs:label "identificador MTA de la estación"@es ;
+    rdfs:comment "Valor de station_id; no es único (493 de 496)."@es ;
+    rdfs:domain schema:SubwayStation ;
+    rdfs:range xsd:string ;
+    rdfs:subPropertyOf schema:identifier ;
+    rdfs:isDefinedBy <http://example.org/parques-nyc/ontologia> .
+
+pnyc:estructura
+    a owl:DatatypeProperty ;
+    rdfs:label "tipo de estructura"@es ;
+    rdfs:comment "Subterránea, elevada, en superficie, etc. (campo structure)."@es ;
+    rdfs:domain schema:SubwayStation ;
+    rdfs:range xsd:string ;
+    rdfs:isDefinedBy <http://example.org/parques-nyc/ontologia> .
+
+pnyc:distritoCentral
+    a owl:DatatypeProperty ;
+    rdfs:label "en distrito central de negocios"@es ;
+    rdfs:comment "Verdadero si la estación está en el CBD (campo cbd)."@es ;
+    rdfs:domain schema:SubwayStation ;
+    rdfs:range xsd:boolean ;
+    rdfs:isDefinedBy <http://example.org/parques-nyc/ontologia> .
+
+pnyc:accesibilidadADA
+    a owl:DatatypeProperty ;
+    rdfs:label "accesibilidad ADA"@es ;
+    rdfs:comment "0 = no accesible, 1 = accesible, 2 = parcialmente accesible."@es ;
+    rdfs:domain schema:SubwayStation ;
+    rdfs:range xsd:integer ;
+    rdfs:isDefinedBy <http://example.org/parques-nyc/ontologia> .
+
+pnyc:adaNorte
+    a owl:DatatypeProperty ;
+    rdfs:label "accesibilidad ADA en sentido norte"@es ;
+    rdfs:comment "Valor de ada_northbound."@es ;
+    rdfs:domain schema:SubwayStation ;
+    rdfs:range xsd:integer ;
+    rdfs:isDefinedBy <http://example.org/parques-nyc/ontologia> .
+
+pnyc:adaSur
+    a owl:DatatypeProperty ;
+    rdfs:label "accesibilidad ADA en sentido sur"@es ;
+    rdfs:comment "Valor de ada_southbound."@es ;
+    rdfs:domain schema:SubwayStation ;
+    rdfs:range xsd:integer ;
+    rdfs:isDefinedBy <http://example.org/parques-nyc/ontologia> .
+
+pnyc:notasADA
+    a owl:DatatypeProperty ;
+    rdfs:label "notas de accesibilidad"@es ;
+    rdfs:comment "Texto de ada_notes; la cadena \"NaN\" se trata como ausencia de valor."@es ;
+    rdfs:domain schema:SubwayStation ;
+    rdfs:range xsd:string ;
+    rdfs:isDefinedBy <http://example.org/parques-nyc/ontologia> .
+
+pnyc:idComplejo
+    a owl:DatatypeProperty ;
+    rdfs:label "identificador del complejo"@es ;
+    rdfs:comment "Valor de complex_id."@es ;
+    rdfs:domain pnyc:ComplejoEstacion ;
+    rdfs:range xsd:string ;
+    rdfs:subPropertyOf schema:identifier ;
+    rdfs:isDefinedBy <http://example.org/parques-nyc/ontologia> .
+
+pnyc:division
+    a owl:DatatypeProperty ;
+    rdfs:label "división"@es ;
+    rdfs:comment "División histórica de la línea (BMT, IND, IRT)."@es ;
+    rdfs:domain pnyc:LineaMetro ;
+    rdfs:range xsd:string ;
+    rdfs:isDefinedBy <http://example.org/parques-nyc/ontologia> .
+
+pnyc:idRuta
+    a owl:DatatypeProperty ;
+    rdfs:label "identificador de la ruta"@es ;
+    rdfs:comment "Letra o número de la ruta (N, W, 1, A...)."@es ;
+    rdfs:domain pnyc:RutaMetro ;
+    rdfs:range xsd:string ;
+    rdfs:subPropertyOf schema:identifier ;
+    rdfs:isDefinedBy <http://example.org/parques-nyc/ontologia> .
+
+pnyc:idEstacionBici
+    a owl:DatatypeProperty ;
+    rdfs:label "identificador de la estación de bicicleta"@es ;
+    rdfs:comment "Valor de station_id en el feed GBFS."@es ;
+    rdfs:domain pnyc:EstacionBicicleta ;
+    rdfs:range xsd:string ;
+    rdfs:subPropertyOf schema:identifier ;
+    rdfs:isDefinedBy <http://example.org/parques-nyc/ontologia> .
+
+pnyc:nombreCorto
+    a owl:DatatypeProperty ;
+    rdfs:label "código corto"@es ;
+    rdfs:comment "Valor de short_name, código visible en la estación."@es ;
+    rdfs:domain pnyc:EstacionBicicleta ;
+    rdfs:range xsd:string ;
+    rdfs:isDefinedBy <http://example.org/parques-nyc/ontologia> .
+
+pnyc:capacidad
+    a owl:DatatypeProperty ;
+    rdfs:label "capacidad"@es ;
+    rdfs:comment "Número de anclajes de la estación (campo capacity)."@es ;
+    rdfs:domain pnyc:EstacionBicicleta ;
+    rdfs:range xsd:integer ;
+    rdfs:isDefinedBy <http://example.org/parques-nyc/ontologia> .
+
+pnyc:tipoEstacion
+    a owl:DatatypeProperty ;
+    rdfs:label "tipo de estación"@es ;
+    rdfs:comment "Valor de station_type."@es ;
+    rdfs:domain pnyc:EstacionBicicleta ;
+    rdfs:range xsd:string ;
+    rdfs:isDefinedBy <http://example.org/parques-nyc/ontologia> .
+
+pnyc:idRegion
+    a owl:DatatypeProperty ;
+    rdfs:label "identificador de región"@es ;
+    rdfs:comment "Valor de region_id; sustituye al distrito que la fuente no trae."@es ;
+    rdfs:domain pnyc:EstacionBicicleta ;
+    rdfs:range xsd:string ;
+    rdfs:isDefinedBy <http://example.org/parques-nyc/ontologia> .
+
+pnyc:distanciaMetros
+    a owl:DatatypeProperty ;
+    rdfs:label "distancia en metros"@es ;
+    rdfs:comment "Distancia mínima entre el punto de la estación y el polígono del parque."@es ;
+    rdfs:domain pnyc:Proximidad ;
+    rdfs:range xsd:decimal ;
+    rdfs:isDefinedBy <http://example.org/parques-nyc/ontologia> .
+
+# -----------------------------------------------------------------------------
+# Listas controladas
+# -----------------------------------------------------------------------------
+# Distritos: tabla de equivalencias entre los códigos de Parks Properties y de la MTA.
+pnycr:distrito-MN
+    a schema:AdministrativeArea ;
+    schema:name "Manhattan" ;
+    pnyc:codigoDistrito "MN" ;
+    pnyc:codigoParques "M" ;
+    pnyc:codigoMetro "M" .
+
+pnycr:distrito-BX
+    a schema:AdministrativeArea ;
+    schema:name "Bronx" ;
+    pnyc:codigoDistrito "BX" ;
+    pnyc:codigoParques "X" ;
+    pnyc:codigoMetro "Bx" .
+
+pnycr:distrito-BK
+    a schema:AdministrativeArea ;
+    schema:name "Brooklyn" ;
+    pnyc:codigoDistrito "BK" ;
+    pnyc:codigoParques "B" ;
+    pnyc:codigoMetro "Bk" .
+
+pnycr:distrito-QN
+    a schema:AdministrativeArea ;
+    schema:name "Queens" ;
+    pnyc:codigoDistrito "QN" ;
+    pnyc:codigoParques "Q" ;
+    pnyc:codigoMetro "Q" .
+
+pnycr:distrito-SI
+    a schema:AdministrativeArea ;
+    schema:name "Staten Island" ;
+    pnyc:codigoDistrito "SI" ;
+    pnyc:codigoParques "R" ;
+    pnyc:codigoMetro "SI" .
+
+# Esquema de conceptos para las 20 categorías de parque (typecategory).
+# Cada categoría se genera como skos:Concept con skos:inScheme pnycr:categorias-parque.
+pnycr:categorias-parque
+    a skos:ConceptScheme ;
+    skos:prefLabel "Categorías de parque de NYC Parks"@es ;
+    dct:source pnycr:fuente-parks-properties .
+
+# -----------------------------------------------------------------------------
+# Metadatos de las fuentes (DCAT y Dublin Core)
+# Cada recurso del grafo apunta a su fuente con dct:source.
+# -----------------------------------------------------------------------------
+pnycr:agente-nyc-parks
+    a dct:Agent ;
+    rdfs:label "NYC Open Data / NYC Department of Parks and Recreation" .
+
+pnycr:fuente-parks-properties
+    a dcat:Dataset ;
+    dct:title "Parks Properties"@en ;
+    dct:publisher pnycr:agente-nyc-parks ;
+    dct:modified "2026-02-05"^^xsd:date ;
+    dcat:landingPage <https://catalog.data.gov/dataset/opendata_parksproperties> ;
+    dcat:distribution pnycr:distribucion-parks-properties .
+
+pnycr:distribucion-parks-properties
+    a dcat:Distribution ;
+    dcat:accessURL <https://data.cityofnewyork.us/resource/enfh-gkve.json> ;
+    dcat:mediaType <https://www.iana.org/assignments/media-types/application/json> .
+
+pnycr:agente-estado-ny
+    a dct:Agent ;
+    rdfs:label "Estado de Nueva York (data.ny.gov)" .
+
+pnycr:fuente-mta-subway-stations
+    a dcat:Dataset ;
+    dct:title "MTA Subway Stations"@en ;
+    dct:publisher pnycr:agente-estado-ny ;
+    dct:modified "2026-11-11"^^xsd:date ;
+    dcat:landingPage <https://catalog.data.gov/dataset/mta-subway-stations> ;
+    dcat:distribution pnycr:distribucion-mta-subway-stations .
+
+pnycr:distribucion-mta-subway-stations
+    a dcat:Distribution ;
+    dcat:accessURL <https://data.ny.gov/resource/39hk-dx4f.json> ;
+    dcat:mediaType <https://www.iana.org/assignments/media-types/application/json> .
+
+pnycr:agente-citi-bike
+    a dct:Agent ;
+    rdfs:label "Citi Bike, vía NYC Open Data" .
+
+pnycr:fuente-citi-bike-gbfs
+    a dcat:Dataset ;
+    dct:title "Citi Bike System Data (feed GBFS station_information)"@en ;
+    dct:publisher pnycr:agente-citi-bike ;
+    dct:modified "2025-08-14"^^xsd:date ;
+    dcat:landingPage <https://catalog.data.gov/dataset/citi-bike-system-data> ;
+    dcat:distribution pnycr:distribucion-citi-bike-gbfs .
+
+pnycr:distribucion-citi-bike-gbfs
+    a dcat:Distribution ;
+    dcat:accessURL <https://gbfs.citibikenyc.com/gbfs/en/station_information.json> ;
+    dcat:mediaType <https://www.iana.org/assignments/media-types/application/json> .
